@@ -127,6 +127,14 @@ body {
 	border-color: transparent #e3e3ff;
 }
 
+.calendar-month-rows table.calendar-row-body tbody tr.calendar-more-date td span {
+	color: #15c;
+	cursor: pointer;
+}
+.calendar-month-rows table.calendar-row-body tbody tr.calendar-more-date td span:hover {
+	text-decoration: underline;
+}
+
 #calendarAddEventPopup div.grid {
 	width: 395px !important;
 }

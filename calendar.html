@@ -66,7 +66,7 @@
 					<tbody>
 						<tr>
 					    	<td>周日</td>
-						    <td id="btnWeek">周一</td>
+						    <td>周一</td>
 							<td>周二</td>
 							<td>周三</td>
 							<td>周四</td>
@@ -76,67 +76,7 @@
 					</tbody>
 				</table>
 			</div>
-			<div class="calendar-month-body">
-				<div class="calendar-month-rows">
-					<table class="calendar-row-bg ui seven column celled table">
-						<tbody><tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tbody>
-					</table>
-					<table class="calendar-row-body ui small seven column table">
-						<tbody>
-							<tr class="calendar-basic-date">
-								<td>1</td>
-								<td>2</td>
-								<td>3</td>
-								<td>4</td>
-								<td>5</td>
-								<td>6</td>
-								<td>7</td>
-							</tr>
-							<tr class="calendar-event-date">
-								<td colspan="3">
-									<div class="td-pos">
-										<div class="td-n td-left td-right">
-											<div class="td-ni">
-												<span class="left"></span>
-												<span class="left1"></span>
-												<span class="right"></span>
-												<span class="right1"></span>
-												asd
-											</div>
-										</div>
-									</div>
-								</td>
-							</tr>
-							<tr class="calendar-event-date">
-								<td></td>
-								<td></td>
-								<td colspan="2">
-									<div class="td-pos">
-										<div class="td-n td-left td-right">
-											<div class="td-ni">
-												<span class="left"></span>
-												<span class="left1"></span>
-												<span class="right"></span>
-												<span class="right1"></span>
-												asd
-											</div>
-										</div>
-									</div>
-								</td>
-								<td>
-									<div class="td-pos">
-										<div class="td-n">
-											<div class="td-ni">
-												asd
-											</div>
-										</div>
-									</div>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
+			<div class="calendar-month-body"></div>
 		</div>
 	</style>
 
@@ -325,11 +265,11 @@
 					$(document.body).on("mouseup", function(e){
 						$("#calendarTable .calendar-month-body").unbind();
 						if (e.which == 1) {	
-							if (!$this.endDomE) {
-								$this.endDomE = e;
+							if (!$this.endDate) {
+								$this.endDate = getIndexDate(e);
 							}
 							
-							$this.setDomArea($this.startDomE, $this.endDomE);
+							$this.setDomArea($this.startDate, $this.endDate);
 						}
 					});
 					
@@ -357,7 +297,10 @@
 					this.$el.html(this.template());
 					this.$el.find("#calendarTable .calendar-month-body").html(bodyHtml);
 					
-					var clientHeight = getClientHeight() - 70;
+					var clientHeight = getClientHeight() - 44;
+					if (clientHeight < 360) {
+						clientHeight = 360;
+					}
 					this.$el.find("#calendarTable .calendar-month-body").css("height", clientHeight + "px");	
 					
 					var trHeight = 96 / 6;
@@ -377,7 +320,7 @@
 					this.render();
 				},
 				downMonthBody: function(e) {
-					if (!e.which == 1) {
+					if (e.which == 1) {
 						Backbone.trigger("initAddEventView");
 						
 						if (!$(e.target).hasClass("td-ni")) {
@@ -387,27 +330,24 @@
 						this.endDate = "";
 						
 						if (this.setArea) {
-							this.startDate = $(e.target).attr("data-date");
-							if (!this.startDate) {
-								this.startDate = getIndexDate(e);
-							}
+							this.startDate = getIndexDate(e);
 						}
 						
-						var nowDom;
+						var nowDate;
 						var $this = this;
 						
 						$(document).on("mousemove", "#calendarTable .calendar-month-body", function(e1) {
 							//在鼠标点下时再响应mousemove事件
 							if (e1.buttons == 1 && $this.setArea) {
-								console.log($(e1.target).hasClass("td-ni"));
-								$this.endDom = e1;
-								if (!nowDom) {
-									nowDom = $this.endDom;
-									$this.setDomArea($this.startDom, $this.endDom);
+								
+								$this.endDate = getIndexDate(e1);
+								if (!nowDate) {
+									nowDate = $this.endDate;
+									$this.setDomArea($this.startDate, $this.endDate);
 								}else{
-									if ($(nowDom.target).attr("data-date") != $($this.endDomE.target).attr("data-date")) {
-										nowDom = $this.endDom;
-										$this.setDomArea($this.startDom, $this.endDom);
+									if (nowDate != $this.endDate) {
+										nowDate = $this.endDate;
+										$this.setDomArea($this.startDate, $this.endDate);
 									}
 								}
 							}
@@ -416,32 +356,33 @@
 				},
 				upMonthBody: function(e) {
 					if (e.which == 1 && this.setArea) {
-						this.endDomE = e;
+						this.setArea = false;
 						
-						var startDate = $(this.startDomE.target).attr("data-date");
-						var endDate = $(this.endDomE.target).attr("data-date");
+						this.endDate = getIndexDate(e);
+						
+						var startDate = this.startDate;
+						var endDate = this.endDate;
 						
 						if((new Date(startDate).getTime()) > (new Date(endDate).getTime())) {
-							startDate = $(this.endDomE.target).attr("data-date");
-							endDate = $(this.startDomE.target).attr("data-date");
+							startDate = this.endDate;
+							endDate =this.startDate;
 						} 
 						
 						Backbone.trigger("showAddEventView", startDate, endDate, e);
 					}
 				},
 				setDomArea: function(start, end) {
+					console.log("setDomArea!");
+					
 					//清除原有的td的"on"
 					$("#calendarTable .calendar-month-body .calendar-month-rows table.calendar-row-bg tbody td").removeClass("on");
 					
-					var startDomValue = $(start.target).attr("data-date");
-					var endDomValue = $(end.target).attr("data-date");
-					
-					var startDomDate = new Date(startDomValue).getTime();
-					var endDomDate = new Date(endDomValue).getTime();
+					var startDomDate = new Date(start).getTime();
+					var endDomDate = new Date(end).getTime();
 					
 					if (startDomDate > endDomDate) {
-						startDomDate = new Date(endDomValue).getTime();
-						endDomDate = new Date(startDomValue).getTime();
+						startDomDate = new Date(end).getTime();
+						endDomDate = new Date(start).getTime();
 					}
 					
 					var area = new Array();
@@ -455,7 +396,6 @@
 					
 					for (var i = 0; i < area.length; i++) {
 						var selector = "#calendarTable .calendar-month-body .calendar-month-rows table.calendar-row-bg tbody td[data-date=" + area[i] + "]";
-						var a = $(selector).attr("data-date");
 						$(selector).addClass("on");
 					}
 				}

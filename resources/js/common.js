@@ -438,7 +438,6 @@ function getEventsHtml(obj, events) {
 							tdArray.push(td);
 							break;
 						}
-						
 					}else {	//如果不是尾巴
 						//有没有到了行尾部
 						if ((j == obj.length - 1) && (new Date(selectedEvents[i].endDate).getTime() > (new Date(obj[obj.length - 1].name).getTime()))) {	//到了行末了，事件还未完成
@@ -482,29 +481,78 @@ function getEventsHtml(obj, events) {
 	}
 	
 	if (tdArray.length > 0) {
+		for (var i = tdArray.length - 1; i < obj.length; i++) {
+			tdArray.push("<td></td>");
+		}
 		var eventHtml = '<tr class="calendar-event-date">' + tdArray.join("") + '<tr>';
 		eventItemArray.push(eventHtml);
 	}
 	
-	if (eventItemArray.length > 3) {
-		eventItemArray = eventItemArray.slice(0, 3);
+	var clientHeight = getClientHeight() - 44;
+	if (clientHeight < 360) {
+		clientHeight = 360;
+	}
+	var itemHeight = clientHeight / 6;
+	
+	var n = Math.floor(itemHeight / 19) - 1;
+	
+	if (eventItemArray.length > n) {
+		eventItemArray = eventItemArray.slice(0, n - 1);
+		var moreArray = new Array();
+		for(var i = 0; i < obj.length; i++) {
+			var date = obj[i].name;
+			var more = getMoreNum(date, events);
+			
+			var tdMore = "<td></td>";
+			if (more > n) {
+				tdMore = "<td><span>另外 " + (more - n + 1) + " 个</span></td>";
+			}
+			moreArray.push(tdMore);
+		}
+		var moreHtml = '<tr class="calendar-more-date">' + moreArray.join("") + '<tr>';
+		eventItemArray.push(moreHtml);
 	}
 	
 	return basicHtml + eventItemArray.join("");
 }
 
-//获取当前td的位置
+//返回more的个数
+function getMoreNum(date, events) {
+	var d = new Date(date).getTime();
+	var n = 0;
+	for (var i = 0; i < events.length; i++) {
+		var eStart = new Date(events[i].startDate).getTime();
+		var eEnd = new Date(events[i].endDate).getTime();
+		
+		if (d >= eStart && d <= eEnd) {
+			n++;
+		}
+	}
+	
+	return n;
+}
+
+//获取当前td的对应日期
 function getIndexDate(e) {
 	var $this = $(e.target);
 	
-	var n = 0;
-	var $t = $this;
-	
-	while($t.prev()[0]) {
-		$t = $t.prev();
-		n++;
+	if ($this.attr("data-date")) {
+		return $this.attr("data-date");
+	}else {
+		var n = 0;
+		var $t = $this;
+		
+		while($t.prev()[0]) {
+			$t = $t.prev();
+			var a = $t.attr("colspan");
+			if ($t.attr("colspan")) {
+				
+				n = n + Number($t.attr("colspan")) - 1;
+			}
+			n++;
+		}
+		
+		var backDate = $($this.parent().parent().parent().parent().find(".calendar-row-bg tbody tr td")[n]);
+		return backDate.attr("data-date");
 	}
-	
-	var backDate = $($this.parent().parent().parent().parent().find(".calendar-row-bg tbody tr td")[n]);
-	return backDate.attr("data-date");
 }
