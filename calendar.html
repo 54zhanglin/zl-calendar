@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Backbone & Semantic</title>
+		
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	    <meta charset="utf-8">
+	    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+		
+		<script src="http://cdn.bootcss.com/jquery/1.11.1/jquery.min.js"></script>
+		<script src="http://cdn.bootcss.com/underscore.js/1.8.3/underscore-min.js"></script>
+		<script src="http://cdn.bootcss.com/backbone.js/1.1.2/backbone.js"></script>
+	
+		<script type="text/javascript" src="resources/tools/semantic/semantic.js"></script>
+		<link rel="stylesheet" href="resources/tools/semantic/semantic.css" />		
+		
+		<script src="http://cdn.bootcss.com/backbone-localstorage.js/1.1.16/backbone.localStorage.js"></script>
+		
+		<script src="resources/js/common.js" type="text/javascript"></script>
+		<link rel="stylesheet" href="resources/css/common.css" />
+		
+		<style>
+		</style>
+		
+	</head>
+	<body>
+	
+	</body>
+	<style type="text/template" id="calendar-header-template">
+		<div class="ui grid">
+			<div class="six wide column calendar-range-wrapper">
+				<div class="ui centered grid">
+					<div class="left aligned fifteen wide column">
+						<div class="ui horizontal list">
+							<div class="item">
+								<div class="ui mini basic icon button" id="lastMonth"><i class="left chevron icon"></i></div>
+							</div>
+							<div class="item" id="nowDate"><%= nowDateText %></div>
+							<div class="item">
+								<div class="ui mini basic icon button" id="nextMonth"><i class="right chevron icon"></i></div>
+							</div>
+							<div class="item <%= isToday ? 'zl-hidden' : '' %>">
+								<div class="ui mini basic button" id="toToday">今天</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="ten wide column">
+				<div class="ui horizontal list">
+					<div class="item">
+						<div class="ui mini basic buttons" id=""> 
+						  <div class="ui active button">月</div>
+						  <div class="ui button">周</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</style>
+	
+	<style type="text/template" id="calendar-body-template">
+		<div id="calendarTable">
+			<div class="calendar-month-header">
+				<table class="ui small seven column celled very compact table">
+					<tbody>
+						<tr>
+					    	<td>周日</td>
+						    <td id="btnWeek">周一</td>
+							<td>周二</td>
+							<td>周三</td>
+							<td>周四</td>
+							<td>周五</td>
+							<td>周六</td>
+				  		</tr>
+					</tbody>
+				</table>
+			</div>
+			<div class="calendar-month-body">
+				<div class="calendar-month-rows">
+					<table class="calendar-row-bg ui seven column celled table">
+						<tbody><tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tbody>
+					</table>
+					<table class="calendar-row-body ui small seven column table">
+						<tbody>
+							<tr class="calendar-basic-date">
+								<td>1</td>
+								<td>2</td>
+								<td>3</td>
+								<td>4</td>
+								<td>5</td>
+								<td>6</td>
+								<td>7</td>
+							</tr>
+							<tr class="calendar-event-date">
+								<td colspan="3">
+									<div class="td-pos">
+										<div class="td-n td-left td-right">
+											<div class="td-ni">
+												<span class="left"></span>
+												<span class="left1"></span>
+												<span class="right"></span>
+												<span class="right1"></span>
+												asd
+											</div>
+										</div>
+									</div>
+								</td>
+							</tr>
+							<tr class="calendar-event-date">
+								<td></td>
+								<td></td>
+								<td colspan="2">
+									<div class="td-pos">
+										<div class="td-n td-left td-right">
+											<div class="td-ni">
+												<span class="left"></span>
+												<span class="left1"></span>
+												<span class="right"></span>
+												<span class="right1"></span>
+												asd
+											</div>
+										</div>
+									</div>
+								</td>
+								<td>
+									<div class="td-pos">
+										<div class="td-n">
+											<div class="td-ni">
+												asd
+											</div>
+										</div>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</style>
+
+	<style type="text/template" id="calendar-template">
+		<div id="app">
+			<div id="calendarHeader"></div>
+			<div id="calendarBody" style="position:relative;"></div>
+			<div id="addEventView"></div>
+		</div>
+	</style>
+	
+	<style type="text/template" id="calendar-add-event-template">
+		<div class="ui popup transition" id="calendarAddEventPopup">
+		  <div class="ui grid">
+		    <div class="column row header">
+		    	<div class="fourteen wide column">活动</div>
+		    	<div class="two wide column">
+		    		<div class="mini ui icon button" id="closePopup"><i class="remove icon"></i></div>
+		    	</div>
+		    </div>
+		    <div class="column row input">
+		    	<div class="ui mini input sixteen column">
+		    		<input type="text" id="eventText">
+		    	</div>
+		    </div>
+		    <div class="column row date">
+		    	<div class="sixteen wide column">
+		    		时间
+		    	</div>
+		    </div>
+		    <div class="column row date">
+		    	<div class="sixteen wide column" id="dateArea">
+		    		9月23日－9月30日
+		    	</div>
+		    </div>
+		    <div class="two column row button">
+		    	<div class="right floated column">
+			    	<div class="mini ui green button" id="editEvents">
+			    		编辑活动
+			    	</div>
+			    	<div class="mini ui blue button" id="addEventsSubmit">
+			    		创建
+			    	</div>
+		    	</div>
+		    </div>
+		  </div>
+		</div>
+	</style>
+	
+	<script type="text/javascript">
+		$(function() {
+			//calendarHeader
+			var HeaderModel = Backbone.Model.extend({
+				defaults: function() {
+					var date = new Date().format("yyyy-MM");
+					var year = date.split("-")[0];
+					var month = date.split("-")[1];
+
+					return {
+						year: year,
+						month: month,
+						type: "month"
+					}
+				}
+			});
+			
+			var HeaderView = Backbone.View.extend({
+				initialize: function() {
+					this.template = _.template($("#calendar-header-template").html());
+				},
+				events: function() {
+					return {
+						"click #lastMonth": "toLastMonth",
+						"click #nextMonth": "toNextMonth",
+						"click #toToday": "toToday",
+					};
+				},
+				render: function() {
+					var type = this.model.get("type");
+					
+					var year = this.model.get("year");
+					var month = this.model.get("month");
+					
+					var nowDateText = "";
+					
+					if (type == "month") {
+						if (Number(month) < 10) {
+							month = "0" + month;
+						}
+						nowDateText = year + "年" + month + "月";
+					}else if (type == "week") {
+						
+					}
+					
+					var isToday = false;
+					var todayDate = new Date();
+					if (year == todayDate.getFullYear()) {
+						if (month == (todayDate.getMonth() + 1)) {
+							isToday = true;
+						}
+					}
+					
+					this.$el.html(this.template({isToday: isToday, nowDateText: nowDateText}));
+					
+					Backbone.trigger("renderCalendarBody", year + "-" + month);
+					
+					return this;
+				},
+				//点击上一个月
+				toLastMonth: function() {
+					var year = Number(this.model.get("year"));
+					var month = Number(this.model.get("month"));
+					
+					var lastMonthYear = year;
+					var lastMonth = month - 1;
+					
+					if(month == 1) {
+						lastMonthYear = (year - 1) + "";
+						lastMonth = "12"; 
+					}
+					
+					this.model.set({year: lastMonthYear, month: lastMonth});
+					this.render();
+				},
+				//点击下一个月
+				toNextMonth: function() {
+					var year = Number(this.model.get("year"));
+					var month = Number(this.model.get("month"));
+					
+					var nextMonthYear = year;
+					var nextMonth = month + 1;
+					
+					if(month == 12) {
+						nextMonthYear = (year + 1) + "";
+						nextMonth = "1"; 
+					}
+					
+					this.model.set({year: nextMonthYear, month: nextMonth});
+					this.render();
+				},
+				//点击今天按钮
+				toToday: function() {
+					var today = new Date();
+					var year = today.getFullYear() + "";
+					var month = (today.getMonth() + 1) + "";
+					
+					this.model.set({year: year, month: month});
+					this.render();
+				}
+			});
+			
+			//calendarBody
+			var DayModel = Backbone.Model.extend({
+				defaults: function() {
+					return {
+						today: false
+					};
+				}
+			});
+			
+			var DaysColle = Backbone.Collection.extend({
+				model: DayModel,
+				localStorage: new Backbone.LocalStorage("DayCollection")
+			});
+			
+			var days = new DaysColle;
+			
+			var BodyView = Backbone.View.extend({
+				//默认的起止年月
+				startDate: "",
+				endDate: "",
+				//记录点击状态
+				setArea: false,
+				//默认年月
+				date: new Date().format("yyyy-MM"),
+				initialize: function() {
+					this.template = _.template($("#calendar-body-template").html());
+					
+					Backbone.on("renderCalendarBody", this.render, this);
+					
+					//如果有新添加，重置渲染
+					this.listenTo(days, "reset", this.resetRender);
+					
+					var $this = this;
+					//在body上绑定鼠标左键点击抬起销毁move事件
+					$(document.body).on("mouseup", function(e){
+						$("#calendarTable .calendar-month-body").unbind();
+						if (e.which == 1) {	
+							if (!$this.endDomE) {
+								$this.endDomE = e;
+							}
+							
+							$this.setDomArea($this.startDomE, $this.endDomE);
+						}
+					});
+					
+					//初始化存储的数据
+					days.fetch();
+				},
+				events: function() {
+					return {
+						"mousedown #calendarTable .calendar-month-body": "downMonthBody",
+						"mouseup #calendarTable .calendar-month-body": "upMonthBody",
+					};
+				},
+				render: function(date) {
+					console.log("render");
+					//如果日期改变，则更改默认日期
+					if (date) {
+						this.date = date;
+					}
+					var daysJSON = days.toJSON();
+					
+					var bodyHtml = getCalendarTableBodyHtml(this.date, daysJSON);
+					
+					var clientHeight = getClientHeight() - 39;
+					
+					this.$el.html(this.template());
+					this.$el.find("#calendarTable .calendar-month-body").html(bodyHtml);
+					
+					var clientHeight = getClientHeight() - 70;
+					this.$el.find("#calendarTable .calendar-month-body").css("height", clientHeight + "px");	
+					
+					var trHeight = 96 / 6;
+					this.$el.find("#calendarTable .calendar-month-body .calendar-month-rows").css("height", trHeight + "%");	
+					
+					return this;
+				},
+				addRender: function() {
+					console.log("addRender!!");
+				},
+				allRender: function() {
+					console.log("allRender!!");
+				},
+				resetRender: function() {
+					//console.log("resetRender!!");
+					//console.log(days.toJSON());
+					this.render();
+				},
+				downMonthBody: function(e) {
+					if (!e.which == 1) {
+						Backbone.trigger("initAddEventView");
+						
+						if (!$(e.target).hasClass("td-ni")) {
+							this.setArea = true;
+						}
+						
+						this.endDate = "";
+						
+						if (this.setArea) {
+							this.startDate = $(e.target).attr("data-date");
+							if (!this.startDate) {
+								this.startDate = getIndexDate(e);
+							}
+						}
+						
+						var nowDom;
+						var $this = this;
+						
+						$(document).on("mousemove", "#calendarTable .calendar-month-body", function(e1) {
+							//在鼠标点下时再响应mousemove事件
+							if (e1.buttons == 1 && $this.setArea) {
+								console.log($(e1.target).hasClass("td-ni"));
+								$this.endDom = e1;
+								if (!nowDom) {
+									nowDom = $this.endDom;
+									$this.setDomArea($this.startDom, $this.endDom);
+								}else{
+									if ($(nowDom.target).attr("data-date") != $($this.endDomE.target).attr("data-date")) {
+										nowDom = $this.endDom;
+										$this.setDomArea($this.startDom, $this.endDom);
+									}
+								}
+							}
+						});
+					}
+				},
+				upMonthBody: function(e) {
+					if (e.which == 1 && this.setArea) {
+						this.endDomE = e;
+						
+						var startDate = $(this.startDomE.target).attr("data-date");
+						var endDate = $(this.endDomE.target).attr("data-date");
+						
+						if((new Date(startDate).getTime()) > (new Date(endDate).getTime())) {
+							startDate = $(this.endDomE.target).attr("data-date");
+							endDate = $(this.startDomE.target).attr("data-date");
+						} 
+						
+						Backbone.trigger("showAddEventView", startDate, endDate, e);
+					}
+				},
+				setDomArea: function(start, end) {
+					//清除原有的td的"on"
+					$("#calendarTable .calendar-month-body .calendar-month-rows table.calendar-row-bg tbody td").removeClass("on");
+					
+					var startDomValue = $(start.target).attr("data-date");
+					var endDomValue = $(end.target).attr("data-date");
+					
+					var startDomDate = new Date(startDomValue).getTime();
+					var endDomDate = new Date(endDomValue).getTime();
+					
+					if (startDomDate > endDomDate) {
+						startDomDate = new Date(endDomValue).getTime();
+						endDomDate = new Date(startDomValue).getTime();
+					}
+					
+					var area = new Array();
+					
+					var step = 24 * 3600 * 1000;
+					
+					for(var i = startDomDate; i < endDomDate + 1; i = i + step) {
+						var date = new Date(i).format("yyyy-MM-dd");
+						area.push(date);
+					}
+					
+					for (var i = 0; i < area.length; i++) {
+						var selector = "#calendarTable .calendar-month-body .calendar-month-rows table.calendar-row-bg tbody td[data-date=" + area[i] + "]";
+						var a = $(selector).attr("data-date");
+						$(selector).addClass("on");
+					}
+				}
+			});
+		
+			//calendar-add-event-View
+			var CalendarAddEventModel = Backbone.Model.extend({
+				defaults: function() {
+					return {
+						start: new Date().format("yyyy-MM-dd"),
+						end: new Date().format("yyyy-MM-dd")
+					};
+				}
+			});
+			
+			var CalendarAddEventView = Backbone.View.extend({
+				initialize: function() {
+					this.template = _.template($("#calendar-add-event-template").html());
+					
+					Backbone.on("showAddEventView", this.showAddEventView, this);
+					Backbone.on("initAddEventView", this.initView, this);
+				},
+				events: function() {
+					return {
+						"click #closePopup": "closeView",
+						"click #addEventsSubmit": "addOneEvent"
+					}
+				},
+				render: function() {
+					this.$el.html(this.template());
+					
+					//绑定关闭点击
+					$(document).on("click", "#closePopup", function() {
+						$("#calendarAddEventPopup").hide();
+						$("#eventText").val("");
+						
+						//清空范围选中
+						$("#calendarTable .calendar-month-body .calendar-month-rows table.calendar-row-bg tbody td").removeClass("on");
+					});
+					
+					return this;
+				},
+				initView: function() {
+					$("#calendarAddEventPopup").hide();
+				},
+				showAddEventView: function(startDate, endDate, upMouseE) {
+					//更新model数据
+					this.model.set({start: startDate, end: endDate});
+				
+					var $popup = $("#calendarAddEventPopup"),
+						positionX = upMouseE.clientX,
+						positionY = upMouseE.clientY,
+						clientHeight = getClientHeight(),
+						clientWidth = getClientWidth(),
+						popupWidth = $popup.outerWidth(),
+						popupHeight = $popup.outerHeight();
+						
+					//如果页面发生变化，实时更改可视页面尺寸
+					window.onresize=function(){
+						clientHeight = getClientHeight();
+						clientWidth = getClientWidth();
+					}
+						
+					var positionArray = new Array();
+					
+					//清除方向定位
+					$popup.removeClass("top");
+					$popup.removeClass("left");
+					$popup.removeClass("right");
+					$popup.removeClass("bottom");
+					$popup.removeClass("center");
+					
+					$popup.addClass("noPosition");
+					
+					//计算left
+					var left;
+					if (clientWidth > popupWidth) {
+						if ((clientWidth - positionX) > popupWidth) {
+							if ((clientHeight - positionY) < popupHeight && positionY < popupHeight) {
+								left = positionX + 5;
+								positionArray.push("right");
+							}else {
+								left = positionX - 20;
+								positionArray.push("left");
+							}
+						}else {
+							if (popupWidth < positionX) {
+								left = positionX - popupWidth + 20;
+								positionArray.push("right")
+							}else {
+								left = positionX - popupWidth / 2;
+								positionArray.push("center");
+							}
+						}
+					}else {
+						alert("你的屏幕太窄了");
+						return;
+					}
+					
+					//计算top
+					var top;
+					if (clientHeight > popupHeight) {
+						if ((clientHeight - positionY) > popupHeight) {
+							top = positionY + 10;
+							positionArray.push("bottom");
+						}else {
+							if (popupHeight < positionY) {
+								top = positionY - popupHeight - 10;
+								positionArray.push("top");
+							}else {
+								top = positionY - popupHeight / 2;
+								positionArray.push("center");
+							}
+						}	
+					}else {
+						alert("你的屏幕太矮了");
+						return;
+					}
+					
+					if (positionArray && positionArray.length == 2) {
+						if (positionArray[0] == "center" && positionArray[1] == "center") {
+							positionArray = [];
+							$popup.addClass("noPosition");
+						}else {
+							$popup.removeClass("noPosition");
+						}
+					}
+					
+					//附加定位
+					$popup.css("left", left);
+					$popup.css("top", top);
+					
+					for(var i = 0; i < positionArray.length; i++) {
+						$popup.addClass(positionArray[i]);
+					}
+					
+					//设置时间
+					var start = new Date(startDate);
+					var end = new Date(endDate);
+					var dateArea = "";
+					if (startDate == endDate) {
+						dateArea = start.format("MM月dd日");
+					}else {
+						if (start.getFullYear() === end.getFullYear()) {
+							dateArea = start.format("MM月dd日") + " ~ " + end.format("MM月dd日");
+						}else {
+							dateArea = start.format("yyyy年MM月dd日") + " ~ " + end.format("yyyy年MM月dd日");
+						}
+					}
+					
+					$("#dateArea").text(dateArea);
+					
+					$popup.show();
+					
+					//获得焦点
+					$("#eventText").focus();
+				},
+				//提交事件添加
+				addOneEvent: function() {
+					var value = $("#eventText").val();
+					var startDate = this.model.get("start");
+					var endDate = this.model.get("end");
+					
+					days.create(new DayModel({startDate: startDate, endDate: endDate, title: value}));
+					days.fetch({reset: true});
+					
+					$("#calendarAddEventPopup").hide();
+					$("#eventText").val("");
+				}
+			});
+		
+			//App
+			var CalendarView = Backbone.View.extend({
+				initialize: function() {
+					this.template = _.template($("#calendar-template").html());
+					
+					this.headerView = new HeaderView({model: new HeaderModel});
+					this.bodyView = new BodyView;
+					
+					this.addEventView = new CalendarAddEventView({model: new CalendarAddEventModel});
+				},
+				render: function() {
+					this.$el.html(this.template());
+					this.$el.find("#calendarHeader").html(this.headerView.render().el);
+					this.$el.find("#calendarBody").html(this.bodyView.el);
+					
+					this.$el.find("#addEventView").html(this.addEventView.render().el);
+					
+					return this;
+				}
+			});
+			
+			var calendar = new CalendarView;
+			
+			$(document.body).html(calendar.render().el);
+			
+		});
+	</script>
+</html>
