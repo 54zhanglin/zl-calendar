@@ -370,7 +370,7 @@ function getEventsHtml(obj, events) {
 				
 				//这个头是不是尾巴
 				if (obj[j].name == selectedEvents[i].endDate) {
-					td = '<td colspan="' + colspan + '">' + 
+					td = '<td colspan="' + colspan + '" draggable="true">' + 
 							'<div class="td-pos">' + 
 								'<div class="td-n">' + 
 									'<div class="td-ni">' + 
@@ -384,7 +384,7 @@ function getEventsHtml(obj, events) {
 				}else {
 					//是否已经到了行末
 					if (j == obj.length - 1) {
-						td = '<td colspan="' + colspan + '">' + 
+						td = '<td colspan="' + colspan + '" draggable="true">' + 
 								'<div class="td-pos">' + 
 									'<div class="td-n td-right">' + 
 										'<div class="td-ni">' + 
@@ -412,7 +412,7 @@ function getEventsHtml(obj, events) {
 					if (obj[j].name == selectedEvents[i].endDate) { //找到尾巴了
 						//判断是否承接了上行的事件
 						if (startUp) {	//事件在上行开始，本行结束
-							td = '<td colspan="' + colspan + '">' + 
+							td = '<td colspan="' + colspan + '" draggable="true">' + 
 									'<div class="td-pos">' + 
 										'<div class="td-n td-left">' + 
 											'<div class="td-ni">' + 
@@ -426,7 +426,7 @@ function getEventsHtml(obj, events) {
 							tdArray.push(td);
 							break;
 						}else {	//事件在本行开始本行结束
-							td = '<td colspan="' + colspan + '">' + 
+							td = '<td colspan="' + colspan + '" draggable="true">' + 
 									'<div class="td-pos">' + 
 										'<div class="td-n">' + 
 											'<div class="td-ni">' + 
@@ -442,7 +442,7 @@ function getEventsHtml(obj, events) {
 						//有没有到了行尾部
 						if ((j == obj.length - 1) && (new Date(selectedEvents[i].endDate).getTime() > (new Date(obj[obj.length - 1].name).getTime()))) {	//到了行末了，事件还未完成
 							if (startUp) {
-								td = '<td colspan="' + colspan + '">' + 
+								td = '<td colspan="' + colspan + '" draggable="true">' + 
 								'<div class="td-pos">' + 
 									'<div class="td-n td-left td-right">' + 
 										'<div class="td-ni">' + 
@@ -456,7 +456,7 @@ function getEventsHtml(obj, events) {
 								'</div>' + 
 							  '</td>';
 							}else {
-								td = '<td colspan="' + colspan + '">' + 
+								td = '<td colspan="' + colspan + '" draggable="true">' + 
 										'<div class="td-pos">' + 
 											'<div class="td-n td-right">' + 
 												'<div class="td-ni">' + 
@@ -504,8 +504,8 @@ function getEventsHtml(obj, events) {
 			var more = getMoreNum(date, events);
 			
 			var tdMore = "<td></td>";
-			if (more > n) {
-				tdMore = "<td><span>另外 " + (more - n + 1) + " 个</span></td>";
+			if (more > n - 1) {
+				tdMore = "<td><span class='more-text'>另外 " + (more - n + 1) + " 个</span></td>";
 			}
 			moreArray.push(tdMore);
 		}
@@ -542,6 +542,10 @@ function getIndexDate(e) {
 		var n = 0;
 		var $t = $this;
 		
+		if ($t.hasClass("more-text")) {
+			$t = $t.parent();
+		}
+		
 		while($t.prev()[0]) {
 			$t = $t.prev();
 			var a = $t.attr("colspan");
@@ -553,6 +557,133 @@ function getIndexDate(e) {
 		}
 		
 		var backDate = $($this.parent().parent().parent().parent().find(".calendar-row-bg tbody tr td")[n]);
+		
+		if ($this.hasClass("more-text")) {
+			backDate = $($this.parent().parent().parent().parent().parent().find(".calendar-row-bg tbody tr td")[n]);
+		}
 		return backDate.attr("data-date");
 	}
+}
+
+
+//获取more所在框的位置信息
+function getMoreParentDomPosition(e) {
+	var $this = $(e.target);
+	var $t = $this.parent();
+	
+	var n = 0;
+	while($t.prev()[0]) {
+		$t = $t.prev();
+		var a = $t.attr("colspan");
+		if ($t.attr("colspan")) {
+			
+			n = n + Number($t.attr("colspan")) - 1;
+		}
+		n++;
+	}
+	
+	var parentObj = $($this.parent().parent().parent().parent().parent().find(".calendar-row-bg tbody tr td")[n]);
+	
+	var position = parentObj[0].getBoundingClientRect();
+	
+	var top = document.documentElement.clientTop;
+    var left= document.documentElement.clientLeft;
+
+    return{
+        top    :   position.top - top,
+        bottom :   position.bottom - top,
+        left   :   position.left - left,
+        right  :   position.right - left
+    }
+}
+
+//获取more的条目组html
+function getMoreItemsHtml(date, events) {
+	console.log("getMoreItemsHtml!!!");
+
+	var date = new Date(date).getTime();
+	
+	var dateEventsHtml = new Array();
+	for (var i = 0; i < events.length; i++) {
+		var es = new Date(events[i].startDate).getTime();
+		var ed = new Date(events[i].endDate).getTime();
+		
+		var trHtml = "";
+		//开头而不结尾
+		if (date == es && date != ed) {
+			trHtml = '<tr>' +
+						'<td>' +
+							'<div class="td-pos">' +
+								'<div class="td-n td-right">' +
+									'<div class="td-ni">' +
+										'<span class="right"></span>' +
+										'<span class="right1"></span>' +
+										events[i].title + 
+									'</div>' +
+								'</div>' +
+							'</div>' +
+						'</td>' +
+					'</tr>';
+			dateEventsHtml.push(trHtml);
+			continue;
+		}
+		
+		//结尾而不开头
+		if (date != es && date == ed) {
+			trHtml = '<tr>' +
+						'<td>' +
+							'<div class="td-pos">' +
+								'<div class="td-n td-left">' +
+									'<div class="td-ni">' +
+										'<span class="left"></span>' +
+										'<span class="left1"></span>' +
+										events[i].title + 
+									'</div>' +
+								'</div>' +
+							'</div>' +
+						'</td>' +
+					'</tr>';
+			dateEventsHtml.push(trHtml);
+			continue;
+		}
+		
+		//既是开头也是结尾
+		if (date == es && date == ed) {
+			trHtml = '<tr>' +
+						'<td>' +
+							'<div class="td-pos">' +
+								'<div class="td-n">' +
+									'<div class="td-ni">' +
+										events[i].title + 
+									'</div>' +
+								'</div>' +
+							'</div>' +
+						'</td>' +
+					'</tr>';
+			dateEventsHtml.push(trHtml);
+			continue;
+		}
+		
+		//既不是开头也不是结尾
+		if (date > es && date < ed) {
+			trHtml = '<tr>' +
+						'<td>' +
+							'<div class="td-pos">' +
+								'<div class="td-n td-left td-right">' +
+									'<div class="td-ni">' +
+										'<span class="left"></span>' +
+										'<span class="left1"></span>' +
+										'<span class="right"></span>' +
+										'<span class="right1"></span>' +
+										events[i].title + 
+									'</div>' +
+								'</div>' +
+							'</div>' +
+						'</td>' +
+					'</tr>';
+			dateEventsHtml.push(trHtml);
+			continue;
+		}
+	}
+	return dateEventsHtml.join("");
 }

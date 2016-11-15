@@ -29,6 +29,10 @@ body {
 	color: #de3972;
 }
 
+#calendarHeader {
+	background: #fff;
+}
+
 #calendarTable table {
     border-radius: 0;
 }
@@ -64,13 +68,13 @@ body {
     border: none;
 }
 
-.calendar-month-rows table.calendar-row-body tbody tr td .td-pos {
+table tbody tr td .td-pos {
 	position: relative;
 	padding: 1px 1px 0 2px;
 	cursor: pointer;
 }
 
-.calendar-month-rows table.calendar-row-body tbody tr td .td-pos .td-n {
+table tbody tr td .td-pos .td-n {
 	border: 1px solid #a9abef;
 	color: #777;
 	background: #e3e3ff;
@@ -79,19 +83,19 @@ body {
 	line-height: 14px;
 }
 
-.calendar-month-rows table.calendar-row-body tbody tr td .td-pos .td-n.td-left {
+table tbody tr td .td-pos .td-n.td-left {
 	margin-left: 6px;
 }
 
-.calendar-month-rows table.calendar-row-body tbody tr td .td-pos .td-n.td-right {
+table tbody tr td .td-pos .td-n.td-right {
 	margin-right: 6px;
 }
 
-.calendar-month-rows table.calendar-row-body tbody tr td .td-pos .td-n .td-ni {
+table tbody tr td .td-pos .td-n .td-ni {
 	overflow: hidden;
 }
 
-.calendar-month-rows table.calendar-row-body tbody tr td .td-pos .td-n .td-ni span.left {
+table tbody tr td .td-pos .td-n .td-ni span.left {
 	border: 0px solid #000;
 	border-width: 8px 6px 8px 0;
 	position: absolute;
@@ -100,7 +104,7 @@ body {
 	border-color: transparent #a9abfe;
 }
 
-.calendar-month-rows table.calendar-row-body tbody tr td .td-pos .td-n .td-ni span.left1 {
+table tbody tr td .td-pos .td-n .td-ni span.left1 {
 	border: 0px solid #000;
 	border-width: 7px 6px 7px 0;
 	position: absolute;
@@ -109,7 +113,7 @@ body {
 	border-color: transparent #e3e3ff;
 }
 
-.calendar-month-rows table.calendar-row-body tbody tr td .td-pos .td-n .td-ni span.right {
+table tbody tr td .td-pos .td-n .td-ni span.right {
 	border: 0px solid #000;
 	border-width: 8px 0 8px 6px;
 	position: absolute;
@@ -118,7 +122,7 @@ body {
 	border-color: transparent #a9abfe;
 }
 
-.calendar-month-rows table.calendar-row-body tbody tr td .td-pos .td-n .td-ni span.right1 {
+table tbody tr td .td-pos .td-n .td-ni span.right1 {
 	border: 0px solid #000;
 	border-width: 7px 0 7px 6px;
 	position: absolute;
@@ -127,11 +131,11 @@ body {
 	border-color: transparent #e3e3ff;
 }
 
-.calendar-month-rows table.calendar-row-body tbody tr.calendar-more-date td span {
+table tbody tr.calendar-more-date td span {
 	color: #15c;
 	cursor: pointer;
 }
-.calendar-month-rows table.calendar-row-body tbody tr.calendar-more-date td span:hover {
+table tbody tr.calendar-more-date td span:hover {
 	text-decoration: underline;
 }
 
@@ -157,4 +161,60 @@ body {
 }
 #calendarAddEventPopup div.grid .column.row.button {
 	padding: 35px 0 15px;
+}
+
+
+#showMoreView {
+	position: absolute;
+	z-index: 180;
+	display: none;
+	border: 1px solid #ccc;
+	border-radius: 2px;
+	background: #fff;
+}
+#showMoreView .ui.grid {
+	margin: 0;
+}
+#showMoreView .ui.grid .column.row {
+	padding: 0;
+}
+#showMoreView .ui.grid .column.row.title {
+	border-bottom: 1px solid #ccc;
+	padding: 2px 0;
+	font-size: 12px;
+	line-height: 16px;
+	background: #e8eef7;
+}
+#showMoreView .ui.grid .column.row.title #closeMore {
+	cursor: pointer;
+	color: #6f6f6f;
+}
+#showMoreView .ui.grid .column.row.title #closeMore {
+	color: #555;
+}
+#showMoreView table {
+	padding: 5px;
+	margin: 0;
+	border: none;
+}
+#showMoreView table tbody tr td {
+	padding: 0;
+	border: none;
+}
+#showMoreView table tbody tr.head td {
+	border-bottom: 1px solid #ccc;
+}
+
+#dragView {
+	border: 1px solid #a9abef;
+	width: 150px;
+	border-radius: 2px;
+	font-size: 12px;
+	line-height: 20px;
+	padding: 0 5px;
+	background: #e3e3ff;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: -9999;
 }

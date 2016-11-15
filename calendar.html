@@ -27,32 +27,30 @@
 	
 	</body>
 	<style type="text/template" id="calendar-header-template">
-		<div class="ui grid">
-			<div class="six wide column calendar-range-wrapper">
-				<div class="ui centered grid">
-					<div class="left aligned fifteen wide column">
-						<div class="ui horizontal list">
-							<div class="item">
-								<div class="ui mini basic icon button" id="lastMonth"><i class="left chevron icon"></i></div>
-							</div>
-							<div class="item" id="nowDate"><%= nowDateText %></div>
-							<div class="item">
-								<div class="ui mini basic icon button" id="nextMonth"><i class="right chevron icon"></i></div>
-							</div>
-							<div class="item <%= isToday ? 'zl-hidden' : '' %>">
-								<div class="ui mini basic button" id="toToday">今天</div>
-							</div>
+		<div class="six wide column calendar-range-wrapper">
+			<div class="ui centered grid">
+				<div class="left aligned fifteen wide column">
+					<div class="ui horizontal list">
+						<div class="item">
+							<div class="ui mini basic icon button" id="lastMonth"><i class="left chevron icon"></i></div>
+						</div>
+						<div class="item" id="nowDate"><%= nowDateText %></div>
+						<div class="item">
+							<div class="ui mini basic icon button" id="nextMonth"><i class="right chevron icon"></i></div>
+						</div>
+						<div class="item <%= isToday ? 'zl-hidden' : '' %>">
+							<div class="ui mini basic button" id="toToday">今天</div>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div class="ten wide column">
-				<div class="ui horizontal list">
-					<div class="item">
-						<div class="ui mini basic buttons" id=""> 
-						  <div class="ui active button">月</div>
-						  <div class="ui button">周</div>
-						</div>
+		</div>
+		<div class="ten wide column">
+			<div class="ui horizontal list">
+				<div class="item">
+					<div class="ui mini basic buttons" id=""> 
+					  <div class="ui active button">月</div>
+					  <div class="ui button">周</div>
 					</div>
 				</div>
 			</div>
@@ -85,10 +83,14 @@
 			<div id="calendarHeader"></div>
 			<div id="calendarBody" style="position:relative;"></div>
 			<div id="addEventView"></div>
+			<div id="showMoreView"></div>
+			<div id="dragView">
+				<span>(<font>3</font>天) asdsd</span> 
+			</div>
 		</div>
 	</style>
 	
-	<style type="text/template" id="calendar-add-event-template">
+	<style type="text/template" id="calendar-month-add-event-template">
 		<div class="ui popup transition" id="calendarAddEventPopup">
 		  <div class="ui grid">
 		    <div class="column row header">
@@ -126,6 +128,18 @@
 		</div>
 	</style>
 	
+	<style type="text/template" id="calendar-month-more-template">
+			<div class="column row title">
+				<span class="fourteen wide column" id="moreDate"></span>
+				<span class="two wide column" id="closeMore">X</span>
+			</div>
+			<div class="column row"> 
+				<table class="ui small seven column celled very compact table">
+					<tbody></tbody>
+				</table>
+			</div>	
+	</style>
+	
 	<script type="text/javascript">
 		$(function() {
 			//calendarHeader
@@ -144,6 +158,8 @@
 			});
 			
 			var HeaderView = Backbone.View.extend({
+				tagName: "div",
+				className: "ui grid",
 				initialize: function() {
 					this.template = _.template($("#calendar-header-template").html());
 				},
@@ -229,20 +245,14 @@
 			});
 			
 			//calendarBody
-			var DayModel = Backbone.Model.extend({
-				defaults: function() {
-					return {
-						today: false
-					};
-				}
+			var EventModel = Backbone.Model.extend();
+			
+			var EventsColle = Backbone.Collection.extend({
+				model: EventModel,
+				localStorage: new Backbone.LocalStorage("EventsCollection")
 			});
 			
-			var DaysColle = Backbone.Collection.extend({
-				model: DayModel,
-				localStorage: new Backbone.LocalStorage("DayCollection")
-			});
-			
-			var days = new DaysColle;
+			var events = new EventsColle;
 			
 			var BodyView = Backbone.View.extend({
 				//默认的起止年月
@@ -250,21 +260,25 @@
 				endDate: "",
 				//记录点击状态
 				setArea: false,
+				//展示more
+				showMore: false,
 				//默认年月
 				date: new Date().format("yyyy-MM"),
+				eventsJSON: {},
 				initialize: function() {
 					this.template = _.template($("#calendar-body-template").html());
 					
 					Backbone.on("renderCalendarBody", this.render, this);
 					
 					//如果有新添加，重置渲染
-					this.listenTo(days, "reset", this.resetRender);
+					this.listenTo(events, "reset", this.resetRender);
 					
 					var $this = this;
 					//在body上绑定鼠标左键点击抬起销毁move事件
 					$(document.body).on("mouseup", function(e){
 						$("#calendarTable .calendar-month-body").unbind();
-						if (e.which == 1) {	
+						var a = $this.showMore;
+						if (e.which == 1 && !$this.showMore) {	
 							if (!$this.endDate) {
 								$this.endDate = getIndexDate(e);
 							}
@@ -273,13 +287,37 @@
 						}
 					});
 					
+					var $this = this;
+					var t;
+					window.onresize = function() {
+						var clientHeight = getClientHeight() - 44;
+						if (clientHeight < 360) {
+							clientHeight = 360;
+						}
+						
+						$this.$el.find("#calendarTable .calendar-month-body").css("height", clientHeight + "px");	
+						
+						var trHeight = 96 / 6;
+						$this.$el.find("#calendarTable .calendar-month-body .calendar-month-rows").css("height", trHeight + "%");
+						
+						var itemHeight = clientHeight / 6;
+						
+						var n = Math.floor(itemHeight / 19) - 1;
+						
+						if (n != t) {
+							t = n;
+							$this.render();
+						}
+					}
+					
 					//初始化存储的数据
-					days.fetch();
+					events.fetch();
 				},
 				events: function() {
 					return {
 						"mousedown #calendarTable .calendar-month-body": "downMonthBody",
 						"mouseup #calendarTable .calendar-month-body": "upMonthBody",
+						"click .more-text": "showMoreView",
 					};
 				},
 				render: function(date) {
@@ -288,14 +326,25 @@
 					if (date) {
 						this.date = date;
 					}
-					var daysJSON = days.toJSON();
+					var eventsJSON = events.toJSON();
 					
-					var bodyHtml = getCalendarTableBodyHtml(this.date, daysJSON);
+					this.eventsJSON = eventsJSON;
+					 
+					var bodyHtml = getCalendarTableBodyHtml(this.date, this.eventsJSON);
 					
 					var clientHeight = getClientHeight() - 39;
 					
 					this.$el.html(this.template());
 					this.$el.find("#calendarTable .calendar-month-body").html(bodyHtml);
+					
+					//拖拽
+					this.$el.find("table td[draggable=true]").each(function() {
+						this.ondragstart = function(e) {
+							var dom = $("#dragView")[0];
+							
+							e.dataTransfer.setDragImage(dom, 0, 0);
+						}
+					});
 					
 					var clientHeight = getClientHeight() - 44;
 					if (clientHeight < 360) {
@@ -308,24 +357,24 @@
 					
 					return this;
 				},
-				addRender: function() {
-					console.log("addRender!!");
-				},
-				allRender: function() {
-					console.log("allRender!!");
-				},
 				resetRender: function() {
-					//console.log("resetRender!!");
-					//console.log(days.toJSON());
 					this.render();
 				},
 				downMonthBody: function(e) {
 					if (e.which == 1) {
 						Backbone.trigger("initAddEventView");
 						
-						if (!$(e.target).hasClass("td-ni")) {
+						if (!$(e.target).hasClass("td-ni") && !$(e.target).hasClass("more-text")) {
 							this.setArea = true;
 						}
+						
+						if ($(e.target).hasClass("more-text")) {
+							this.showMore = true;
+						}else {
+							this.showMore = false;
+							Backbone.trigger("hideMoreView");
+						}
+						
 						
 						this.endDate = "";
 						
@@ -355,6 +404,7 @@
 					}
 				},
 				upMonthBody: function(e) {
+					console.log(this.setArea);
 					if (e.which == 1 && this.setArea) {
 						this.setArea = false;
 						
@@ -398,6 +448,14 @@
 						var selector = "#calendarTable .calendar-month-body .calendar-month-rows table.calendar-row-bg tbody td[data-date=" + area[i] + "]";
 						$(selector).addClass("on");
 					}
+				},
+				showMoreView: function(e) {
+					console.log("showMore!!");
+					var date = getIndexDate(e);
+					console.log(date);
+					var domPosition = getMoreParentDomPosition(e);
+					
+					Backbone.trigger("showMoreView", date, this.eventsJSON, domPosition.left, domPosition.top);
 				}
 			});
 		
@@ -413,7 +471,7 @@
 			
 			var CalendarAddEventView = Backbone.View.extend({
 				initialize: function() {
-					this.template = _.template($("#calendar-add-event-template").html());
+					this.template = _.template($("#calendar-month-add-event-template").html());
 					
 					Backbone.on("showAddEventView", this.showAddEventView, this);
 					Backbone.on("initAddEventView", this.initView, this);
@@ -439,6 +497,7 @@
 					return this;
 				},
 				initView: function() {
+					$("#calendarTable .calendar-month-body .calendar-month-rows table.calendar-row-bg tbody td").removeClass("on");
 					$("#calendarAddEventPopup").hide();
 				},
 				showAddEventView: function(startDate, endDate, upMouseE) {
@@ -559,11 +618,59 @@
 					var startDate = this.model.get("start");
 					var endDate = this.model.get("end");
 					
-					days.create(new DayModel({startDate: startDate, endDate: endDate, title: value}));
-					days.fetch({reset: true});
+					events.create(new EventModel({startDate: startDate, endDate: endDate, title: value}));
+					events.fetch({reset: true});
 					
 					$("#calendarAddEventPopup").hide();
 					$("#eventText").val("");
+				}
+			});
+			
+			//月份显示more
+			var ShowMoreView = Backbone.View.extend({
+				tagName: "div",
+				className: "ui grid", 
+				initialize: function() {
+					this.template = _.template($("#calendar-month-more-template").html());
+					
+					Backbone.on("showMoreView", this.showMore, this);
+					Backbone.on("hideMoreView", this.hideMore, this);
+				},
+				events: function() {
+					return {
+						"click #closeMore": "hideMore"
+					}
+				},
+				render: function() {
+					this.$el.html(this.template());
+					return this;
+				},
+				showMore: function(date, eventsJSON, left, top) {
+					//calender主体宽度
+					var clientWidth = $("#calendarTable")[0].clientWidth;
+					//more框宽度
+					var moreViewWidth = clientWidth / 7 - 15;
+					//滚动条高度
+					var scrollTop = getScrollTop();
+					
+					//初始化信息
+					var dateTitle = new Date(date).format("MM月dd日");
+					$("#showMoreView #moreDate").text(dateTitle);
+					
+					var moreItemsHtml = getMoreItemsHtml(date, eventsJSON);
+					
+					$("#showMoreView .ui.grid .column.row table tbody").html(moreItemsHtml);
+					
+					$("#showMoreView").show();
+					$("#showMoreView").css("width", moreViewWidth);
+					$("#showMoreView").css("left", left);
+					$("#showMoreView").css("top", top + scrollTop);
+				},
+				hideMore: function() {
+					//初始化
+					$("#showMoreView #moreDate").text("");
+					$("#showMoreView .ui.grid .column.row table tbody").html("");
+					$("#showMoreView").hide();
 				}
 			});
 		
@@ -576,6 +683,8 @@
 					this.bodyView = new BodyView;
 					
 					this.addEventView = new CalendarAddEventView({model: new CalendarAddEventModel});
+					this.showMoreView = new ShowMoreView;
+					
 				},
 				render: function() {
 					this.$el.html(this.template());
@@ -583,6 +692,8 @@
 					this.$el.find("#calendarBody").html(this.bodyView.el);
 					
 					this.$el.find("#addEventView").html(this.addEventView.render().el);
+					
+					this.$el.find("#showMoreView").html(this.showMoreView.render().el);
 					
 					return this;
 				}
