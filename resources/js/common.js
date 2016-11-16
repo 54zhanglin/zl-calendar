@@ -370,7 +370,7 @@ function getEventsHtml(obj, events) {
 				
 				//这个头是不是尾巴
 				if (obj[j].name == selectedEvents[i].endDate) {
-					td = '<td colspan="' + colspan + '" draggable="true">' + 
+					td = '<td colspan="' + colspan + '" draggable="true" data-start="' + selectedEvents[i].startDate + '" data-end="' + selectedEvents[i].endDate + '">' + 
 							'<div class="td-pos">' + 
 								'<div class="td-n">' + 
 									'<div class="td-ni">' + 
@@ -384,7 +384,7 @@ function getEventsHtml(obj, events) {
 				}else {
 					//是否已经到了行末
 					if (j == obj.length - 1) {
-						td = '<td colspan="' + colspan + '" draggable="true">' + 
+						td = '<td colspan="' + colspan + '" draggable="true" data-start="' + selectedEvents[i].startDate + '" data-end="' + selectedEvents[i].endDate + '">' + 
 								'<div class="td-pos">' + 
 									'<div class="td-n td-right">' + 
 										'<div class="td-ni">' + 
@@ -412,7 +412,7 @@ function getEventsHtml(obj, events) {
 					if (obj[j].name == selectedEvents[i].endDate) { //找到尾巴了
 						//判断是否承接了上行的事件
 						if (startUp) {	//事件在上行开始，本行结束
-							td = '<td colspan="' + colspan + '" draggable="true">' + 
+							td = '<td colspan="' + colspan + '" draggable="true" data-start="' + selectedEvents[i].startDate + '" data-end="' + selectedEvents[i].endDate + '">' + 
 									'<div class="td-pos">' + 
 										'<div class="td-n td-left">' + 
 											'<div class="td-ni">' + 
@@ -426,7 +426,7 @@ function getEventsHtml(obj, events) {
 							tdArray.push(td);
 							break;
 						}else {	//事件在本行开始本行结束
-							td = '<td colspan="' + colspan + '" draggable="true">' + 
+							td = '<td colspan="' + colspan + '" draggable="true" data-start="' + selectedEvents[i].startDate + '" data-end="' + selectedEvents[i].endDate + '">' + 
 									'<div class="td-pos">' + 
 										'<div class="td-n">' + 
 											'<div class="td-ni">' + 
@@ -442,7 +442,7 @@ function getEventsHtml(obj, events) {
 						//有没有到了行尾部
 						if ((j == obj.length - 1) && (new Date(selectedEvents[i].endDate).getTime() > (new Date(obj[obj.length - 1].name).getTime()))) {	//到了行末了，事件还未完成
 							if (startUp) {
-								td = '<td colspan="' + colspan + '" draggable="true">' + 
+								td = '<td colspan="' + colspan + '" draggable="true" data-start="' + selectedEvents[i].startDate + '" data-end="' + selectedEvents[i].endDate + '">' + 
 								'<div class="td-pos">' + 
 									'<div class="td-n td-left td-right">' + 
 										'<div class="td-ni">' + 
@@ -456,7 +456,7 @@ function getEventsHtml(obj, events) {
 								'</div>' + 
 							  '</td>';
 							}else {
-								td = '<td colspan="' + colspan + '" draggable="true">' + 
+								td = '<td colspan="' + colspan + '" draggable="true" data-start="' + selectedEvents[i].startDate + '" data-end="' + selectedEvents[i].endDate + '">' + 
 										'<div class="td-pos">' + 
 											'<div class="td-n td-right">' + 
 												'<div class="td-ni">' + 

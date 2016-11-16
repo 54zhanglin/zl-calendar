@@ -85,7 +85,7 @@
 			<div id="addEventView"></div>
 			<div id="showMoreView"></div>
 			<div id="dragView">
-				<span>(<font>3</font>天) asdsd</span> 
+				(<font>3</font>天) <span>asdsd</span> 
 			</div>
 		</div>
 	</style>
@@ -312,6 +312,8 @@
 					
 					//初始化存储的数据
 					events.fetch();
+					
+					this.eventsJSON = events.toJSON();
 				},
 				events: function() {
 					return {
@@ -326,9 +328,6 @@
 					if (date) {
 						this.date = date;
 					}
-					var eventsJSON = events.toJSON();
-					
-					this.eventsJSON = eventsJSON;
 					 
 					var bodyHtml = getCalendarTableBodyHtml(this.date, this.eventsJSON);
 					
@@ -337,13 +336,40 @@
 					this.$el.html(this.template());
 					this.$el.find("#calendarTable .calendar-month-body").html(bodyHtml);
 					
+					
+					var $this = this;
 					//拖拽
 					this.$el.find("table td[draggable=true]").each(function() {
 						this.ondragstart = function(e) {
 							var dom = $("#dragView")[0];
 							
-							e.dataTransfer.setDragImage(dom, 0, 0);
+							var start = $(this).attr("data-start");
+							var end = $(this).attr("data-end");
+							
+							//设置拖拽的图示
+							var text = $(this).text();
+							var n = $(this).attr("colspan");
+							
+							$("#dragView").find("font").text(n);
+							$("#dragView").find("span").text(text);
+							
+							if (e.dataTransfer.setDragImage) {
+								e.dataTransfer.setDragImage(dom, 0, 0);
+							}
+							
+							//拖拽的时候，将本条事件颜色更改，然后显示区域
+							$(this).addClass("dr");
+							
+							$this.setDomArea(start, end);
+							
 						}
+					});
+					
+					this.$el.find("table td").not("[draggable=true]").each(function() {
+						this.ondragover = function(e) {
+							console.log(e.target);
+						}
+						//console.log(this);
 					});
 					
 					var clientHeight = getClientHeight() - 44;
@@ -358,6 +384,7 @@
 					return this;
 				},
 				resetRender: function() {
+					//this.eventsJSON = events.toJSON();
 					this.render();
 				},
 				downMonthBody: function(e) {
@@ -404,7 +431,6 @@
 					}
 				},
 				upMonthBody: function(e) {
-					console.log(this.setArea);
 					if (e.which == 1 && this.setArea) {
 						this.setArea = false;
 						
