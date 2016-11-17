@@ -280,7 +280,7 @@
 						var a = $this.showMore;
 						if (e.which == 1 && !$this.showMore) {	
 							if (!$this.endDate) {
-								$this.endDate = getIndexDate(e);
+								$this.endDate = getPositionDateFromMonth(this.date, e);;
 							}
 							
 							$this.setDomArea($this.startDate, $this.endDate);
@@ -290,7 +290,7 @@
 					var $this = this;
 					var t;
 					window.onresize = function() {
-						var clientHeight = getClientHeight() - 44;
+						var clientHeight = getClientHeight() + getScrollTop() - 44;
 						if (clientHeight < 360) {
 							clientHeight = 360;
 						}
@@ -324,6 +324,7 @@
 				},
 				render: function(date) {
 					console.log("render");
+					console.log(getClientHeight());
 					//如果日期改变，则更改默认日期
 					if (date) {
 						this.date = date;
@@ -367,12 +368,18 @@
 					
 					this.$el.find("table td").not("[draggable=true]").each(function() {
 						this.ondragover = function(e) {
-							console.log(e.target);
+							//console.log(e.target);
+							e.preventDefault();
 						}
 						//console.log(this);
+						
+						this.ondrop = function(e) {
+							//e.preventDefault();
+							console.log(e.target);
+						}
 					});
 					
-					var clientHeight = getClientHeight() - 44;
+					var clientHeight = getClientHeight() + getScrollTop() - 44;
 					if (clientHeight < 360) {
 						clientHeight = 360;
 					}
@@ -384,10 +391,13 @@
 					return this;
 				},
 				resetRender: function() {
-					//this.eventsJSON = events.toJSON();
+					this.eventsJSON = events.toJSON();
 					this.render();
 				},
 				downMonthBody: function(e) {
+					var d = getPositionDateFromMonth(this.date, e);
+					console.log(d);
+					
 					if (e.which == 1) {
 						Backbone.trigger("initAddEventView");
 						
@@ -406,7 +416,7 @@
 						this.endDate = "";
 						
 						if (this.setArea) {
-							this.startDate = getIndexDate(e);
+							this.startDate = getPositionDateFromMonth(this.date, e);;
 						}
 						
 						var nowDate;
@@ -416,7 +426,7 @@
 							//在鼠标点下时再响应mousemove事件
 							if (e1.buttons == 1 && $this.setArea) {
 								
-								$this.endDate = getIndexDate(e1);
+								$this.endDate = getPositionDateFromMonth($this.date, e1);
 								if (!nowDate) {
 									nowDate = $this.endDate;
 									$this.setDomArea($this.startDate, $this.endDate);
@@ -434,7 +444,7 @@
 					if (e.which == 1 && this.setArea) {
 						this.setArea = false;
 						
-						this.endDate = getIndexDate(e);
+						this.endDate = getPositionDateFromMonth(this.date, e);;
 						
 						var startDate = this.startDate;
 						var endDate = this.endDate;
@@ -448,8 +458,6 @@
 					}
 				},
 				setDomArea: function(start, end) {
-					console.log("setDomArea!");
-					
 					//清除原有的td的"on"
 					$("#calendarTable .calendar-month-body .calendar-month-rows table.calendar-row-bg tbody td").removeClass("on");
 					

@@ -532,40 +532,6 @@ function getMoreNum(date, events) {
 	return n;
 }
 
-//获取当前td的对应日期
-function getIndexDate(e) {
-	var $this = $(e.target);
-	
-	if ($this.attr("data-date")) {
-		return $this.attr("data-date");
-	}else {
-		var n = 0;
-		var $t = $this;
-		
-		if ($t.hasClass("more-text")) {
-			$t = $t.parent();
-		}
-		
-		while($t.prev()[0]) {
-			$t = $t.prev();
-			var a = $t.attr("colspan");
-			if ($t.attr("colspan")) {
-				
-				n = n + Number($t.attr("colspan")) - 1;
-			}
-			n++;
-		}
-		
-		var backDate = $($this.parent().parent().parent().parent().find(".calendar-row-bg tbody tr td")[n]);
-		
-		if ($this.hasClass("more-text")) {
-			backDate = $($this.parent().parent().parent().parent().parent().find(".calendar-row-bg tbody tr td")[n]);
-		}
-		return backDate.attr("data-date");
-	}
-}
-
-
 //获取more所在框的位置信息
 function getMoreParentDomPosition(e) {
 	var $this = $(e.target);
@@ -686,4 +652,30 @@ function getMoreItemsHtml(date, events) {
 		}
 	}
 	return dateEventsHtml.join("");
+}
+
+//获取当前坐标的日期
+function getPositionDateFromMonth(date, event) {
+	//当前可视范围宽高
+	var clientWidth = getClientWidth()
+	var clientHeight = getClientHeight();
+	
+	//滚动条位置
+	var scrollTop = getScrollTop();
+	
+	//鼠标点击点相对于日历主体的坐标
+	var mouseX = event.clientX;
+	var mouseY = event.clientY + scrollTop - 70;
+	
+	//计算横向位置step
+	var xStep = clientWidth / 7;
+	var yStep = (clientHeight + scrollTop - 70) / 6;
+	
+	//位置
+	var n = Math.floor(mouseX / xStep) + Math.floor(mouseY / yStep) * 7; 
+	
+	//获取当前月份数组
+	var dates = getMonthDays(new Date(date));
+	
+	return dates[n].name;
 }
