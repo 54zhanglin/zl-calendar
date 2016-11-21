@@ -565,8 +565,6 @@ function getMoreParentDomPosition(e) {
 
 //获取more的条目组html
 function getMoreItemsHtml(date, events) {
-	console.log("getMoreItemsHtml!!!");
-
 	var date = new Date(date).getTime();
 	
 	var dateEventsHtml = new Array();

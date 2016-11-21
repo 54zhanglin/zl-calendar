@@ -258,6 +258,9 @@
 				//默认的起止年月
 				startDate: "",
 				endDate: "",
+				//设置拖拽开始时间
+				dragStart: "",
+				dragEnd: "",
 				//记录点击状态
 				setArea: false,
 				//展示more
@@ -269,6 +272,7 @@
 					this.template = _.template($("#calendar-body-template").html());
 					
 					Backbone.on("renderCalendarBody", this.render, this);
+					Backbone.on("clearDomArea", this.clearDomArea, this);
 					
 					//如果有新添加，重置渲染
 					this.listenTo(events, "reset", this.resetRender);
@@ -324,7 +328,6 @@
 				},
 				render: function(date) {
 					console.log("render");
-					console.log(getClientHeight());
 					//如果日期改变，则更改默认日期
 					if (date) {
 						this.date = date;
@@ -347,9 +350,12 @@
 							var start = $(this).attr("data-start");
 							var end = $(this).attr("data-end");
 							
+							$this.startDate = start;
+							$this.endDate = end;
+							
 							//设置拖拽的图示
 							var text = $(this).text();
-							var n = $(this).attr("colspan");
+							var n = ((new Date(end).getTime()) - (new Date(start).getTime())) / (24 * 60 * 60 * 1000) + 1;
 							
 							$("#dragView").find("font").text(n);
 							$("#dragView").find("span").text(text);
@@ -358,24 +364,40 @@
 								e.dataTransfer.setDragImage(dom, 0, 0);
 							}
 							
-							//拖拽的时候，将本条事件颜色更改，然后显示区域
-							$(this).addClass("dr");
+							//拖拽开始时间
+							var dragStart = getPositionDateFromMonth($this.date, e);
 							
-							$this.setDomArea(start, end);
+							//计算时间范围
+							var dragEnd = new Date(new Date(dragStart).getTime() + (24 * 60 * 60 * 1000) * (n - 1)).format("yyyy-MM-dd");
 							
+							$this.dragStart = dragStart;
+							$this.dragN = n;
+							
+							
+							
+							//设置反选区域
+							$this.setDomArea(dragStart, dragEnd);
 						}
 					});
 					
-					this.$el.find("table td").not("[draggable=true]").each(function() {
+					this.$el.find("#calendarTable .calendar-month-body table td").not("[draggable=true]").each(function() {
+						//允许放置
+						//拖拽过程中的渲染
 						this.ondragover = function(e) {
-							//console.log(e.target);
 							e.preventDefault();
+							var start = getPositionDateFromMonth($this.date, e);
+							var end = new Date(new Date(start).getTime() + (24 * 60 * 60 * 1000) * ($this.dragN - 1)).format("yyyy-MM-dd");
+							
+							if (start != $this.dragStart) {
+								$this.setDomArea(start, end);
+								$this.dragStart = start;
+							}
 						}
-						//console.log(this);
 						
 						this.ondrop = function(e) {
 							//e.preventDefault();
-							console.log(e.target);
+							var date = getPositionDateFromMonth($this.date, e);
+							console.log(date);
 						}
 					});
 					
@@ -396,7 +418,6 @@
 				},
 				downMonthBody: function(e) {
 					var d = getPositionDateFromMonth(this.date, e);
-					console.log(d);
 					
 					if (e.which == 1) {
 						Backbone.trigger("initAddEventView");
@@ -458,8 +479,7 @@
 					}
 				},
 				setDomArea: function(start, end) {
-					//清除原有的td的"on"
-					$("#calendarTable .calendar-month-body .calendar-month-rows table.calendar-row-bg tbody td").removeClass("on");
+					this.clearDomArea();
 					
 					var startDomDate = new Date(start).getTime();
 					var endDomDate = new Date(end).getTime();
@@ -483,10 +503,12 @@
 						$(selector).addClass("on");
 					}
 				},
+				clearDomArea: function() {
+					//清除原有的td的"on"
+					$("#calendarTable .calendar-month-body .calendar-month-rows table.calendar-row-bg tbody td").removeClass("on");
+				},
 				showMoreView: function(e) {
-					console.log("showMore!!");
-					var date = getIndexDate(e);
-					console.log(date);
+					var date = getPositionDateFromMonth(this.date, e);;
 					var domPosition = getMoreParentDomPosition(e);
 					
 					Backbone.trigger("showMoreView", date, this.eventsJSON, domPosition.left, domPosition.top);
@@ -524,14 +546,14 @@
 						$("#calendarAddEventPopup").hide();
 						$("#eventText").val("");
 						
-						//清空范围选中
-						$("#calendarTable .calendar-month-body .calendar-month-rows table.calendar-row-bg tbody td").removeClass("on");
+						Backbone.trigger("clearDomArea");
 					});
 					
 					return this;
 				},
 				initView: function() {
-					$("#calendarTable .calendar-month-body .calendar-month-rows table.calendar-row-bg tbody td").removeClass("on");
+					Backbone.trigger("clearDomArea");					
+
 					$("#calendarAddEventPopup").hide();
 				},
 				showAddEventView: function(startDate, endDate, upMouseE) {
